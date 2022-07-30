@@ -1,6 +1,7 @@
 import { HttpStatusCode } from './../types/HttpStatusCode';
 import { Request, Response } from "express"
 import { FindAttributeOptions } from "sequelize/types"
+import { Op } from 'sequelize'
 import { Usuario } from '../models/Usuario'
 import bcrypt from 'bcrypt'
 
@@ -8,14 +9,41 @@ import bcrypt from 'bcrypt'
 const get = async(req: Request, res: Response) => {
   try {
     const { id } = req.params
+    const { query, page } = req.query
     
     const attributes: FindAttributeOptions = { exclude: ["password"] }
+    const limit = 10
+    const actualPage = page ? parseInt(page as string) : 1
     if(id){
       const usuario = await Usuario.findByPk(id, { attributes })
       return res.status(usuario ? HttpStatusCode.OK : HttpStatusCode.NOT_FOUND).json(usuario)
     }
     
-    res.json(await Usuario.findAll({ attributes }))
+    const count = Math.floor(await Usuario.count() / limit) + 1;
+    
+    if(query){
+      const data = await Usuario.findAll({
+        attributes,
+        limit,
+        offset: (actualPage - 1) * limit,
+        where:{
+          [Op.or]: [
+            {nombres: {[Op.like]: `%${query}%`}},
+            {apellidos: {[Op.like]: `%${query}%`}},
+            {email: {[Op.like]: `%${query}%`}}
+          ]
+        }
+      })
+      
+      return res.json({ page: actualPage, totalPages: count, data })
+    }
+    
+    const data = await Usuario.findAll({ 
+      attributes,
+      limit,
+      offset: (actualPage - 1) * limit, 
+    })
+    return res.json({ page: actualPage, totalPages: count, data })
   } catch (error) {
     console.log("Error Usuario: ", error)
     res.status(HttpStatusCode.BAD_REQUEST).json(error)

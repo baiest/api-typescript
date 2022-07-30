@@ -6,7 +6,7 @@ type ApiRoute = {
 export const routes: ApiRoute[] = [
   {
     name: 'usuario',
-    isProtected: true
+    isProtected: false
   },
   {
     name: 'auth',
