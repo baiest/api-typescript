@@ -30,7 +30,7 @@ export const server = () => {
   try {
     if(process.env.DEVELOPMENT) return app.listen(PORT, () => console.log('Servidor iniciado en el puerto', PORT))
     
-    https.createServer({
+    return https.createServer({
       cert: fs.readFileSync('C:/openssl/x64/bin/client.cert'),
       key: fs.readFileSync('C:/openssl/x64/bin/client.key')
     }, app).listen(PORT, () => console.log('Servidor https iniciado en el puerto', PORT))
